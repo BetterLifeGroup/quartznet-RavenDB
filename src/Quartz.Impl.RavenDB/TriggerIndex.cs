@@ -1,5 +1,4 @@
-﻿using Raven.Abstractions.Indexing;
-using Raven.Client.Indexes;
+﻿using Raven.Client.Documents.Indexes;
 
 namespace Quartz.Impl.RavenDB
 {
@@ -14,7 +13,9 @@ namespace Quartz.Impl.RavenDB
         {
             return new IndexDefinition
             {
-                Map = @"from doc in docs.Triggers
+                Maps =
+                {
+                    @"from doc in docs.Triggers
                         select new {
 	                        JobName = doc.JobName,
                             Group = doc.Group,
@@ -22,8 +23,10 @@ namespace Quartz.Impl.RavenDB
                             NextFireTimeTicks = doc.NextFireTimeTicks,
                             NextFireTimeUtc = doc.NextFireTimeUtc,
                             Priority = doc.Priority,
-                            State = doc.State
+                            State = doc.State,
+                            Scheduler = doc.Scheduler
                         }"
+                }
             };
         }
     }

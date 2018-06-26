@@ -1,3 +1,6 @@
+#### This Fork updates the code of the RavenDB JobStore to use the RavenDB 4 client.
+---
+
 # Quartz.NET-RavenDB
 JobStore implementation for Quartz.NET scheduler using RavenDB.
 
