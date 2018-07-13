@@ -76,11 +76,21 @@ namespace Quartz.Impl.RavenDB
             var database = ConfigurationManager.AppSettings["quartznet-ravendb-database"];
             Database =  string.IsNullOrWhiteSpace(database) ? DefaultDatabaseName : database;
 
-            //read certificate from config
-            var certPathConfig = ConfigurationManager.AppSettings["quartznet-ravendb-certificatePath"];
-            if (!string.IsNullOrWhiteSpace(certPathConfig))
+            //try get certificate from thumbprint
+            var thumbprint = ConfigurationManager.AppSettings["quartznet-ravendb-certificateThumbprint"];
+            if (!string.IsNullOrWhiteSpace(thumbprint))
             {
-                Certificate = new X509Certificate2(certPathConfig);
+                Certificate = FindByThumbprint(thumbprint);
+            }
+
+            if (Certificate == null)
+            {
+                //try read certificate from path
+                var certPathConfig = ConfigurationManager.AppSettings["quartznet-ravendb-certificatePath"];
+                if (!string.IsNullOrWhiteSpace(certPathConfig))
+                {
+                    Certificate = new X509Certificate2(certPathConfig);
+                }
             }
             
             InstanceName = "UnitTestScheduler";
@@ -91,6 +101,27 @@ namespace Quartz.Impl.RavenDB
             new TriggerGroupIndex().Execute(DocumentStoreHolder.Store);
             new JobIndex().Execute(DocumentStoreHolder.Store);
             new JobGroupIndex().Execute(DocumentStoreHolder.Store);
+        }
+
+        private X509Certificate2 FindByThumbprint(string certificateThumbprint)
+        {
+            X509Certificate2 certificate = null;
+            if (!string.IsNullOrWhiteSpace(certificateThumbprint))
+            {
+                using (var certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+                {
+                    certStore.Open(OpenFlags.ReadOnly);
+                    var certCollection = certStore.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
+                    // Get the first cert with the thumbprint
+                    if (certCollection.Count > 0)
+                    {
+                        certificate = certCollection[0];
+                    }
+                    certStore.Close();
+                }
+            }
+
+            return certificate;
         }
 
         /// <summary>
